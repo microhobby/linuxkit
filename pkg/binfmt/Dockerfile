@@ -1,5 +1,6 @@
 # Use Debian testing Qemu 4.2.0 until https://bugs.alpinelinux.org/issues/8131 is resolved.
 FROM debian@sha256:79f148e13b4c596d4ad7fd617aba3630e37cf04f04538699341ed1267bd61a23 AS qemu
+
 RUN apt-get update && apt-get install -y qemu-user-static && \
     mv /usr/bin/qemu-aarch64-static /usr/bin/qemu-aarch64 && \
     mv /usr/bin/qemu-arm-static /usr/bin/qemu-arm && \
@@ -17,9 +18,13 @@ COPY main.go /go/src/binfmt/
 RUN go-compile.sh /go/src/binfmt
 
 FROM scratch
+
 ENTRYPOINT []
+
 WORKDIR /
+
 COPY --from=qemu usr/bin/qemu-* usr/bin/
 COPY --from=mirror /go/bin/binfmt usr/bin/binfmt
 COPY etc/binfmt.d/00_linuxkit.conf etc/binfmt.d/00_linuxkit.conf
+
 CMD ["/usr/bin/binfmt"]
